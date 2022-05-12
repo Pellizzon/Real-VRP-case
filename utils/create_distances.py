@@ -1,12 +1,20 @@
-import pandas as pd
+import os
 from itertools import combinations
+
+import pandas as pd
 
 from utils import calculate_distance
 
+dir_path = os.path.dirname(os.path.abspath(__file__))
+base_path = os.path.join(dir_path, '..', 'data')
 
-if __name__ == "_main__":
-    offload = pd.read_csv('../data/offload.csv')
-    inputs = pd.read_csv('../data/inputs.csv')
+offload_data_path = os.path.join(base_path, 'offload.csv')
+input_data_path = os.path.join(base_path, 'inputs.csv')
+distances_save_path = os.path.join(base_path, 'distances.csv')
+
+if __name__ == "__main__":
+    offload = pd.read_csv(offload_data_path)
+    inputs = pd.read_csv(input_data_path)
 
     all_data = pd.concat([offload, inputs])
     all_data.reset_index(drop=True, inplace=True)
@@ -18,4 +26,4 @@ if __name__ == "_main__":
 
     distances = list(map(lambda x: calculate_distance(all_data, x), tuples))
     distances_dataframe = pd.DataFrame(distances, columns=['from', 'to', 'distance'])
-    distances_dataframe.to_csv('data/distances.csv', index=False)
+    distances_dataframe.to_csv(distances_save_path, index=False)
