@@ -3,7 +3,7 @@ from itertools import combinations
 
 import pandas as pd
 
-from utils import calculate_distance
+from utils import get_distance
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 base_path = os.path.join(dir_path, '..', 'data')
@@ -24,6 +24,6 @@ if __name__ == "__main__":
 
     tuples = list(combinations(indexes, 2))
 
-    distances = list(map(lambda x: calculate_distance(all_data, x), tuples))
+    distances = list(map(lambda x: get_distance(all_data, x), tuples))
     distances_dataframe = pd.DataFrame(distances, columns=['from', 'to', 'distance'])
     distances_dataframe.to_csv(distances_save_path, index=False)
