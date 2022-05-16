@@ -1,18 +1,23 @@
 import os
+import sys
 import time
-import numpy as np
-import pandas as pd
-from datetime import timedelta
 from copy import deepcopy
 from dataclasses import dataclass
-from termcolor import colored
+from datetime import timedelta
 from typing import List, Tuple
-from .utils import (
+
+import numpy as np
+import pandas as pd
+from termcolor import colored
+
+sys.path.insert(0, "../")
+
+from src.utils import (
+    DistanceMatrix,
+    Location,
+    OilField,
     Solution,
     Truck,
-    OilField,
-    Location,
-    DistanceMatrix,
     distance_to_cost,
     liter_to_bbl,
 )

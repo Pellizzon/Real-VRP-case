@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 
 
@@ -13,6 +14,7 @@ def liter_to_bbl(volume: float) -> float:
     """
     output = volume * 0.00628981
     return output
+
 
 def distance_to_cost(
     diesel_price: float,
@@ -39,7 +41,9 @@ def distance_to_cost(
 if __name__ == "__main__":
 
     current_path = os.path.dirname(os.path.abspath(__file__))
-    distance_matrix_path = os.path.join(current_path, "..", "..", "data", "distance_matrix.csv")
+    distance_matrix_path = os.path.join(
+        current_path, "..", "..", "data", "distance_matrix.csv"
+    )
 
     distance_matrix = pd.read_csv(distance_matrix_path, sep=";", index_col=0)
     distance_matrix.index = distance_matrix["Name"]

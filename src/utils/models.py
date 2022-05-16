@@ -1,14 +1,17 @@
-from typing import List
 from dataclasses import dataclass
+from typing import List
+
 
 @dataclass
 class Location:
     idx: int
     name: str
 
+
 @dataclass
 class OilField(Location):
     production: float
+
 
 @dataclass
 class Truck:
@@ -19,6 +22,7 @@ class Truck:
     fixed_cost: float
     var_cost: float
     capacity: float
+
 
 @dataclass
 class Solution:

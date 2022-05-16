@@ -1,9 +1,11 @@
 import os
-import requests
-import pandas as pd
-from typing import Dict
-from dotenv import load_dotenv
 from dataclasses import dataclass
+from typing import Dict
+
+import pandas as pd
+import requests
+from dotenv import load_dotenv
+
 
 @dataclass
 class DistanceMatrix:
@@ -21,7 +23,7 @@ class DistanceMatrix:
         payload = {
             "origins": [],
             "destinations": [],
-            "travelMode": "driving", 
+            "travelMode": "driving",
         }
 
         for lat, long in zip(self.input_data["Latitude"], self.input_data["Longitude"]):
@@ -30,10 +32,9 @@ class DistanceMatrix:
             entry["longitude"] = long
             payload["origins"] += [entry]
             payload["destinations"] += [entry]
-        
+
         return payload
 
-    
     def __format_output(self, data: Dict) -> pd.DataFrame:
         """Formats output from API request as a DataFrame.
 
@@ -53,7 +54,6 @@ class DistanceMatrix:
         df.index = df["Name"]
         df.drop(columns=["Name"], inplace=True)
         return df
-            
 
     def calculate(self) -> None:
         """Calculates the distance matrix of the input locations.
@@ -69,17 +69,19 @@ class DistanceMatrix:
 
         # Setting up request URL
         api_key = os.getenv("BING_MAPS_KEY")
-        url = f"https://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix?key={api_key}"
-        
+        url = (
+            f"https://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix?key={api_key}"
+        )
+
         payload = self.__format_payload()
-        
+
         try:
 
             res = requests.post(
                 url=url,
                 json=payload,
             )
-            
+
             if res.status_code == 200:
                 output = self.__format_output(res.json())
                 self.matrix = output
@@ -91,12 +93,13 @@ class DistanceMatrix:
             raise err
 
     def store_backup(self) -> None:
-        """Saves a backup Distance Matrix as a CSV file in the data directory.
-        """
+        """Saves a backup Distance Matrix as a CSV file in the data directory."""
         self.calculate()
 
         current_path = os.path.dirname(os.path.abspath(__file__))
-        backup_path = os.path.join(current_path, "..", "..", "data", "distance_matrix.csv")
+        backup_path = os.path.join(
+            current_path, "..", "..", "data", "distance_matrix.csv"
+        )
 
         self.matrix.to_csv(backup_path, sep=";")
 
@@ -109,5 +112,3 @@ if __name__ == "__main__":
     df = pd.read_csv(locations_path, sep=";", index_col=False)
 
     DistanceMatrix(df).store_backup()
-    
-    
