@@ -7,15 +7,16 @@ from copy import deepcopy
 from dataclasses import dataclass
 from termcolor import colored
 from typing import List, Tuple
-from utils import (
+from .utils import (
     Solution,
     Truck,
-    OilField, 
+    OilField,
     Location,
     DistanceMatrix,
     distance_to_cost,
     liter_to_bbl,
 )
+
 
 @dataclass
 class GlobalSolver:
@@ -38,7 +39,7 @@ class GlobalSolver:
                     OilField(
                         idx=field_count,
                         name=name,
-                        production=self.locations_info["Production"][i]
+                        production=self.locations_info["Production"][i],
                     )
                 ]
                 field_count += 1
@@ -46,8 +47,10 @@ class GlobalSolver:
                 depot = Location(idx=0, name=name)
         return (oil_fields, depot)
 
-    def __setup_trucks(self, num_trucks: int, truck_capacity: float, depot: Location) -> List[Truck]:
-        """Builds a list of N trucks that will pickup oil at the oil fields and deliver it 
+    def __setup_trucks(
+        self, num_trucks: int, truck_capacity: float, depot: Location
+    ) -> List[Truck]:
+        """Builds a list of N trucks that will pickup oil at the oil fields and deliver it
         at offload sites.
 
         Args:
@@ -59,7 +62,7 @@ class GlobalSolver:
             List[Truck]: List of Truck objects
         """
         capacity = liter_to_bbl(volume=truck_capacity)
-        trucks = [] 
+        trucks = []
         for i in range(num_trucks):
             trucks += [
                 Truck(
@@ -102,7 +105,7 @@ class GlobalSolver:
             if total_cost < optimal_cost:
                 optimal_cost = total_cost
             return trucks, optimal_cost
-        
+
         for t in trucks:
             for f in oil_fields:
                 if f not in visited:
@@ -114,7 +117,7 @@ class GlobalSolver:
                         else:
                             t.var_cost -= self.cost_matrix[t.route[-1].name][t.end.idx]
                             t.var_cost += self.cost_matrix[t.route[-1].name][f.idx]
-                            t.var_cost += self.cost_matrix[f.name][t.end.idx]  
+                            t.var_cost += self.cost_matrix[f.name][t.end.idx]
                         t.route += [f]
                         t.capacity -= f.production
                         ret_trucks, ret_cost = self.__solve(
@@ -162,12 +165,12 @@ class GlobalSolver:
         self.optimal_solution.trucks = deepcopy(solution)
         self.optimal_solution.total_cost = optimal_cost
 
-        
-            
 
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
-    distance_matrix_path = os.path.join(current_path, "..", "data", "distance_matrix.csv")
+    distance_matrix_path = os.path.join(
+        current_path, "..", "data", "distance_matrix.csv"
+    )
     locations_path = os.path.join(current_path, "..", "data", "locations_reduced.csv")
     locations = pd.read_csv(locations_path, sep=";", index_col=False, encoding="UTF-8")
 
@@ -192,10 +195,15 @@ if __name__ == "__main__":
     start = time.time()
     solver.run(num_trucks=2, truck_capacity=truck_capacity)
     duration = time.time() - start
-    
+
     # Imprime a resposta para o usuário
     if solver.optimal_solution.total_cost == np.inf:
-        print(colored("Não existe uma solução para o problema com as condições inseridas.", "red"))
+        print(
+            colored(
+                "Não existe uma solução para o problema com as condições inseridas.",
+                "red",
+            )
+        )
     else:
         for i, t in enumerate(solver.optimal_solution.trucks):
             print(colored(f"Caminhão {i + 1}", "green"))
@@ -207,5 +215,9 @@ if __name__ == "__main__":
             print(f"Carga Total: {liter_to_bbl(truck_capacity) - t.capacity:.2f} bbl")
             print(f"Custo: R$ {t.var_cost + t.fixed_cost:.2f}")
             print()
-        print(colored(f"Custo Total Otimizado: {solver.optimal_solution.total_cost}", "yellow"))
+        print(
+            colored(
+                f"Custo Total Otimizado: {solver.optimal_solution.total_cost}", "yellow"
+            )
+        )
         print(colored(f"Solver Time: {timedelta(seconds=duration)}", "blue"))

@@ -1,19 +1,19 @@
 import os
 import time
-import pandas as pd
-import numpy as np
-from termcolor import colored
 from datetime import timedelta
+
+import numpy as np
+import pandas as pd
+from termcolor import colored
+
 from src.global_search import GlobalSolver
-from src.utils.distance_matrix import DistanceMatrix
 from src.utils.converter import distance_to_cost, liter_to_bbl
+from src.utils.distance_matrix import DistanceMatrix
 from src.utils.models import Solution
 
+
 def run_global(
-    t_count: int,
-    t_capacity: float,
-    t_consumption: float,
-    diesel_price: float
+    t_count: int, t_capacity: float, t_consumption: float, diesel_price: float
 ) -> None:
     current_path = os.path.dirname(os.path.abspath(__file__))
     distance_matrix_path = os.path.join(current_path, "data", "distance_matrix.csv")
@@ -44,7 +44,12 @@ def run_global(
     # Imprime a resposta para o usuário
     print()
     if solver.optimal_solution.total_cost == np.inf:
-        print(colored("Não existe uma solução para o problema com as condições inseridas.", "red"))
+        print(
+            colored(
+                "Não existe uma solução para o problema com as condições inseridas.",
+                "red",
+            )
+        )
     else:
         for i, t in enumerate(solver.optimal_solution.trucks):
             print(colored(f"Caminhão {i + 1}", "green"))
@@ -56,17 +61,21 @@ def run_global(
             print(f"Carga Total: {liter_to_bbl(truck_capacity) - t.capacity:.2f} bbl")
             print(f"Custo: R$ {t.var_cost + t.fixed_cost:.2f}")
             print()
-        print(colored(f"Custo Total Otimizado: {solver.optimal_solution.total_cost}", "yellow"))
+        print(
+            colored(
+                f"Custo Total Otimizado: {solver.optimal_solution.total_cost}", "yellow"
+            )
+        )
         print(colored(f"Solver Time: {timedelta(seconds=duration)}", "blue"))
-
-
 
 
 if __name__ == "__main__":
 
     truck_count = int(input("Insert the number of available trucks: "))
     truck_capacity = float(input("Insert the capacity of the available trucks: "))
-    truck_consumption = float(input("Insert the diesel consumption (km/l) of the available trucks: "))
+    truck_consumption = float(
+        input("Insert the diesel consumption (km/l) of the available trucks: ")
+    )
     diesel_price = float(input("Insert the current diesel price per liter: "))
 
     print(colored("VRP Solver Strategies:", "blue"))
@@ -81,7 +90,7 @@ if __name__ == "__main__":
         pass
 
     elif strategy == "1":
-        run_global()
+        run_global(truck_count, truck_capacity, truck_consumption, diesel_price)
 
     elif strategy == "2":
         pass
