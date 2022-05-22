@@ -32,6 +32,7 @@ def distance_to_cost(
         pd.DataFrame: Cost matrix.
     """
     ratio = diesel_price / truck_consumption
+    #print(dist_matrix)
     cost_matrix = dist_matrix.copy()
     for col in dist_matrix.columns:
         cost_matrix[col] = dist_matrix[col] * ratio
@@ -49,4 +50,4 @@ if __name__ == "__main__":
     distance_matrix.index = distance_matrix["Name"]
     distance_matrix.drop(columns=["Name"], inplace=True)
     cost_matrix = distance_to_cost(6.62, 17.5, distance_matrix)
-    print(cost_matrix)
+    #print(cost_matrix)

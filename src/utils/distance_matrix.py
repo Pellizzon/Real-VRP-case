@@ -61,7 +61,7 @@ class DistanceMatrix:
         Raises:
             err: API request error.
         """
-
+        
         # Loading .env info
         current_path = os.path.dirname(os.path.abspath(__file__))
         dotenv_path = os.path.join(current_path, "..", "..", ".env")
