@@ -1,4 +1,3 @@
-from cgi import test
 import os
 import sys
 import time
@@ -20,36 +19,39 @@ from src.utils import (
     Solution,
     Truck,
     distance_to_cost,
+    format_solution_output,
     liter_to_bbl,
 )
 
+
 @dataclass
-class GlobalSolver:
+class HeuristicSolver:
+    cost_matrix: pd.DataFrame
     locations_info: pd.DataFrame
     dist_matrix: pd.DataFrame
-    #optimal_solution: Solution
+    optimal_solution: Solution
 
     def __setup_locations(self) -> Tuple[List[OilField], Location]:
-            """Separates depot from oil fields and builds its support list.
+        """Separates depot from oil fields and builds its support list.
 
-            Returns:
-                Tuple[List[OilField], List[OffloadSite]]: List of OilField objects and Depot location.
-            """
-            oil_fields = []
-            field_count = 0
-            for i, name in enumerate(self.locations_info.index):
-                if self.locations_info["Depot"][i] == 0:
-                    oil_fields += [
-                        OilField(
-                            idx=field_count,
-                            name=self.locations_info["Name"][i],
-                            production=self.locations_info["Production"][i],
-                        )
-                    ]    
-                else:
-                    depot = Location(idx=field_count, name=self.locations_info["Name"][i])
-                field_count += 1
-            return (oil_fields, depot)
+        Returns:
+            Tuple[List[OilField], List[OffloadSite]]: List of OilField objects and Depot location.
+        """
+        oil_fields = []
+        field_count = 0
+        for i, name in enumerate(self.locations_info.index):
+            if self.locations_info["Depot"][i] == 0:
+                oil_fields += [
+                    OilField(
+                        idx=field_count,
+                        name=name,
+                        production=self.locations_info["Production"][i],
+                    )
+                ]
+            else:
+                depot = Location(idx=field_count, name=name)
+            field_count += 1
+        return (oil_fields, depot)
 
     def __setup_trucks(
         self, num_trucks: int, truck_capacity: float, depot: Location
@@ -81,6 +83,17 @@ class GlobalSolver:
             ]
         return trucks
 
+    def __calculate_total_cost(self, trucks: List[Truck]) -> float:
+        """Calculates the total cost of a solution.
+
+        Args:
+            trucks (List[Truck]): List of trucks.
+
+        Returns:
+            float: Total cost of the solution.
+        """
+        return sum(map(lambda x: x.fixed_cost + x.var_cost if x.route else 0.0, trucks))
+
     def __solve(
         self,
         visited: List[OilField],
@@ -100,40 +113,40 @@ class GlobalSolver:
         Returns:
             Solution: Object containing best routes and total cost.
         """
-        #print("OIIII")
         for t in trucks:
             test_capacity = False
             if len(t.route) == 0:
                 position = t.start.name
-            #print((test_capacity or len(visited) == len(oil_fields)))
             idx_pos = 1
-            while not(test_capacity or len(visited) == len(oil_fields)):
+            while not (test_capacity or len(visited) == len(oil_fields)):
                 change = False
                 next_position_list = np.array(self.dist_matrix[position].T)
                 next_position_list_copy = np.sort(next_position_list)
-                next_position = np.where(next_position_list == next_position_list_copy[idx_pos])
-                #print("Capacidade atual:", t.capacity, "idx:", idx_pos)
-                #time.sleep(1)
+                next_position = np.where(
+                    next_position_list == next_position_list_copy[idx_pos]
+                )
                 for oil in oil_fields:
                     if oil.idx == next_position[0][0]:
                         if oil not in visited:
                             if t.capacity - oil.production >= 0:
                                 t.route += [oil]
-                                visited += [oil]
                                 t.capacity -= oil.production
+                                t.var_cost += self.cost_matrix[position][oil.name]
+
+                                visited += [oil]
                                 position = oil.name
                                 idx_pos = 1
                                 change = True
-                    #print("trocando oil")
-                if not(change):
+
+                if not (change):
                     idx_pos += 1
 
-                if idx_pos >= 9:
+                if idx_pos >= len(oil_fields):
                     test_capacity = True
-                
-        #print(trucks)
-        return trucks
 
+            print(t.route)
+
+        return trucks, self.__calculate_total_cost(trucks)
 
     def run(self, num_trucks: int, truck_capacity: float) -> None:
         oil_fields, depot = self.__setup_locations()
@@ -142,54 +155,39 @@ class GlobalSolver:
             truck_capacity=truck_capacity,
             depot=depot,
         )
-        solution = self.__solve(
+        solution, optimal_cost = self.__solve(
             visited=[],
             trucks=trucks,
             oil_fields=oil_fields,
-            )
+        )
 
-
-        return solution
-
-        #print(trucks)
-        #print(oil_fields)
-        
-        
+        self.optimal_solution.trucks = deepcopy(solution)
+        self.optimal_solution.total_cost = optimal_cost
 
 
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
     locations_path = os.path.join(current_path, "..", "data", "locations_reduced.csv")
-    locations = pd.read_csv(locations_path, sep=";", index_col=False, encoding="UTF-8") 
+    locations = pd.read_csv(locations_path, sep=";", index_col=False, encoding="UTF-8")
 
     distance_matrix = DistanceMatrix(input_data=locations)
     distance_matrix.calculate()
-    #print(distance_matrix)
-    #diesel_price=6.62,
-    #truck_consumption=17.5,
-    #print(distance_matrix.matrix)
+    cost_matrix = distance_to_cost(
+        diesel_price=6.62,
+        truck_consumption=17.5,
+        dist_matrix=distance_matrix.matrix,
+    )
 
-    solver = GlobalSolver(
+    solver = HeuristicSolver(
+        cost_matrix=cost_matrix,
         locations_info=locations,
-        dist_matrix=distance_matrix.matrix  
+        dist_matrix=distance_matrix.matrix,
+        optimal_solution=Solution(trucks=[], total_cost=np.inf),
     )
 
     truck_capacity = 10000
     start = time.time()
-    solution =  solver.run(num_trucks=2, truck_capacity=truck_capacity)
+    solver.run(num_trucks=2, truck_capacity=truck_capacity)
     duration = time.time() - start
 
-    for i in solution:
-        print("Caminhão:")
-        print(i)
-        print("----")
-
-    #teste = distance.loc[distance['from'] == 1]
-    #teste2 = distance.loc[distance['from'] == 8].head(1)
-    #teste3 = distance.loc[distance['from'] == 8].head(1)
-    #teste4 = distance.loc[distance['from'] == 8].head(1)
-
-    
-    #print(teste)
-    #print(teste2)
-    #print(locations["Name"][2])
+    format_solution_output(solver, truck_capacity, duration)

@@ -19,16 +19,17 @@ from src.utils import (
     Solution,
     Truck,
     distance_to_cost,
+    format_solution_output,
     liter_to_bbl,
 )
 
 
 @dataclass
 class GlobalSolver:
-
     cost_matrix: pd.DataFrame
     locations_info: pd.DataFrame
     optimal_solution: Solution
+    dist_matrix: pd.DataFrame = None
 
     def __setup_locations(self) -> Tuple[List[OilField], Location]:
         """Separates depot from oil fields and builds its support list.
@@ -51,6 +52,17 @@ class GlobalSolver:
             else:
                 depot = Location(idx=0, name=name)
         return (oil_fields, depot)
+
+    def __calculate_total_cost(self, trucks: List[Truck]) -> float:
+        """Calculates the total cost of a solution.
+
+        Args:
+            trucks (List[Truck]): List of trucks.
+
+        Returns:
+            float: Total cost of the solution.
+        """
+        return sum(map(lambda x: x.fixed_cost + x.var_cost if x.route else 0.0, trucks))
 
     def __setup_trucks(
         self, num_trucks: int, truck_capacity: float, depot: Location
@@ -104,9 +116,8 @@ class GlobalSolver:
             Solution: Object containing best routes and total cost.
         """
         if len(visited) == len(oil_fields):
-            total_cost = 0
-            for t in trucks:
-                total_cost += t.fixed_cost + t.var_cost
+            total_cost = self.__calculate_total_cost(trucks)
+
             if total_cost < optimal_cost:
                 optimal_cost = total_cost
             return trucks, optimal_cost
@@ -201,28 +212,4 @@ if __name__ == "__main__":
     solver.run(num_trucks=2, truck_capacity=truck_capacity)
     duration = time.time() - start
 
-    # Imprime a resposta para o usuário
-    if solver.optimal_solution.total_cost == np.inf:
-        print(
-            colored(
-                "Não existe uma solução para o problema com as condições inseridas.",
-                "red",
-            )
-        )
-    else:
-        for i, t in enumerate(solver.optimal_solution.trucks):
-            print(colored(f"Caminhão {i + 1}", "green"))
-            line = f"Rota: {t.start.name} -> "
-            for f in t.route:
-                line += f"{f.name} -> "
-            line += f"{t.end.name}"
-            print(line)
-            print(f"Carga Total: {liter_to_bbl(truck_capacity) - t.capacity:.2f} bbl")
-            print(f"Custo: R$ {t.var_cost + t.fixed_cost:.2f}")
-            print()
-        print(
-            colored(
-                f"Custo Total Otimizado: {solver.optimal_solution.total_cost}", "yellow"
-            )
-        )
-        print(colored(f"Solver Time: {timedelta(seconds=duration)}", "blue"))
+    format_solution_output(solver, truck_capacity, duration)
