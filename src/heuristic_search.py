@@ -39,17 +39,18 @@ class HeuristicSolver:
         """
         oil_fields = []
         field_count = 0
+        print(self.locations_info.index)
         for i, name in enumerate(self.locations_info.index):
             if self.locations_info["Depot"][i] == 0:
                 oil_fields += [
                     OilField(
                         idx=field_count,
-                        name=name,
+                        name=self.locations_info["Name"][i],
                         production=self.locations_info["Production"][i],
                     )
-                ]
+                ]    
             else:
-                depot = Location(idx=field_count, name=name)
+                depot = Location(idx=field_count, name=self.locations_info["Name"][i])
             field_count += 1
         return (oil_fields, depot)
 
@@ -113,6 +114,8 @@ class HeuristicSolver:
         Returns:
             Solution: Object containing best routes and total cost.
         """
+        print(self.dist_matrix)
+        print(oil_fields)
         for t in trucks:
             test_capacity = False
             if len(t.route) == 0:
@@ -167,7 +170,7 @@ class HeuristicSolver:
 
 if __name__ == "__main__":
     current_path = os.path.dirname(os.path.abspath(__file__))
-    locations_path = os.path.join(current_path, "..", "data", "locations_reduced.csv")
+    locations_path = os.path.join(current_path, "..", "data", "locations.csv")
     locations = pd.read_csv(locations_path, sep=";", index_col=False, encoding="UTF-8")
 
     distance_matrix = DistanceMatrix(input_data=locations)
