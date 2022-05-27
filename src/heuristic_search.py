@@ -144,7 +144,7 @@ class HeuristicSolver:
                 if not (change):
                     idx_pos += 1
 
-                if idx_pos >= len(oil_fields):
+                if idx_pos == len(oil_fields) + 1:
                     test_capacity = True
 
             print(t.route)
@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
     truck_capacity = 10000
     start = time.time()
-    solver.run(num_trucks=2, truck_capacity=truck_capacity)
+    solver.run(num_trucks=7, truck_capacity=truck_capacity)
     duration = time.time() - start
 
     format_solution_output(solver, truck_capacity, duration)
