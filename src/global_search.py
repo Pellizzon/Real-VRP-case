@@ -209,7 +209,7 @@ if __name__ == "__main__":
 
     truck_capacity = 10000
     start = time.time()
-    solver.run(num_trucks=2, truck_capacity=truck_capacity)
+    solver.run(num_trucks=3, truck_capacity=truck_capacity)
     duration = time.time() - start
 
     format_solution_output(solver, truck_capacity, duration)

@@ -148,6 +148,8 @@ class HeuristicSolver:
                     test_capacity = True
 
             print(t.route)
+            if len(t.route) > 0:
+                t.var_cost += self.cost_matrix[t.route[-1].name][t.end.name]
 
         return trucks, self.__calculate_total_cost(trucks)
 
@@ -190,7 +192,7 @@ if __name__ == "__main__":
 
     truck_capacity = 10000
     start = time.time()
-    solver.run(num_trucks=7, truck_capacity=truck_capacity)
+    solver.run(num_trucks=6, truck_capacity=truck_capacity)
     duration = time.time() - start
 
     format_solution_output(solver, truck_capacity, duration)
